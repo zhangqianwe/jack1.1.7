@@ -72,6 +72,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
             queryWrapper.in("dept_Id", getListID(allDep,deptzId));
         }
         if(StringUtils.isNotBlank(pageParam.getRealname())){
+
             queryWrapper.like("name",pageParam.getRealname());
         }
         IPage<Map<String, Object>> mapIPage = userMapper.selectMapsPage(new Page<>(pageParam.getPageNum(), pageParam.getPageSize()), queryWrapper);
