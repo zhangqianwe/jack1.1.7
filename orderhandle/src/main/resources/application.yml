@@ -1,0 +1,24 @@
+## springboot整合rabbitmq的基本配置
+spring:
+  rabbitmq:
+    addresses: 192.168.0.203:5672
+    username: zhangqianwen
+    password: zhangqianwen
+    virtual-host: /
+    ## 消费端配置
+    listener:
+      simple:
+        concurrency: 5
+        ## manual:手动 ack（确认）
+        acknowledge-mode: manual
+        max-concurrency: 10
+        prefetch: 1
+#  datasource:
+#    url: jdbc:mysql://127.0.0.1:3306/jack?useSSL=false&characterEncoding=utf8&useAffectedRows=true&useOldAliasMetadataBehavior=true
+#    username: root
+#    password: zhangqianwen123
+#    driverClassName: com.mysql.jdbc.Driver
+server:
+  port: 8001
+  servlet:
+    context-path: /

@@ -1,0 +1,79 @@
+server:
+  port: 7771
+spring:
+  application:
+    name: JACK-API
+  rabbitmq:
+    host: 192.168.0.203
+    port: 5672
+    username: jack
+    password: jack
+    virtual-host: /
+  cloud:
+    stream:
+      bindings:
+        myInput:
+          #指定输入通道对应的主题名
+          destination: minestream
+          #指定该应用实例属于 stream 消费组
+          group: stream
+          contentType: application/json
+          consumer:
+            #通过该参数开启消费者分区功能
+            partitioned: true
+        myOutput:
+          #指定输出通道对应的主题名
+          destination: minestream
+          producer:
+            #通过该参数指定了分区键的表达式规则，可以根据实际的输出消息规则配置 SpEL 来生成合适的分区键
+            partitionKeyExpression: payload
+            partitionCount: 2
+      #该参数指定了当前消费者的总实例数量
+      instance-count: 2
+      #该参数设置了当前实例的索引号，从 0 开始，最大值为 spring.cloud.stream.instance-count 参数 - 1
+      instance-index: 0
+  jackson:
+    time-zone: GMT+8
+    date-format: yyyy-MM-dd HH:mm:ss
+    joda-date-time-format: yyyy-MM-dd HH:mm:ss
+  datasource:
+#    url: jdbc:mysql://39.105.193.94:3306/device_management?useSSL=false&characterEncoding=utf8&useAffectedRows=true&useOldAliasMetadataBehavior=true
+#    username: root
+#    password: Iben123@2019!
+    url: jdbc:mysql://127.0.0.1:3306/jack?useSSL=false&characterEncoding=utf8&useAffectedRows=true&useOldAliasMetadataBehavior=true
+    username: root
+    password: zhangqianwen123
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+    initialization-mode: always
+    continue-on-error: true
+#    schema:
+#      - "classpath:db/schema.sql"
+#    data:
+#      - "classpath:db/data.sql"
+    hikari:
+      minimum-idle: 5
+      connection-test-query: SELECT 1 FROM DUAL
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: SpringBootDemoHikariCP
+      max-lifetime: 60000
+      connection-timeout: 30000
+#mybatis-plus配置控制台打印完整带参数SQL语句
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  type-aliases-package: com.jack.mapper,com.jack.service
+
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://admin:admin123@127.0.0.1:8881/eureka
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}

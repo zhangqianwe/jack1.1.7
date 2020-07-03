@@ -1,0 +1,131 @@
+hystrix:
+  command:
+    default:  #default全局有效，service id指定应用有效
+      execution:
+        timeout:
+          #如果enabled设置为false，则请求超时交给ribbon控制,为true,则超时作为熔断根据
+          enabled: false
+        isolation:
+          thread:
+            timeoutInMilliseconds: 2000 #断路器超时时间，默认1000ms
+
+feign.hystrix.enabled: true
+
+server:
+  port: 9991
+spring:
+  application:
+    name: JACK-GATEWAY
+  #服务名
+  cloud:
+    gateway:
+#      httpclient:             #--|
+#        connect-timeout: 10000 #--|==>全局http超时示例
+#        response-timeout: 100s  #--|
+      discovery:
+        locator:
+          enabled: true
+          #开启小写验证，默认feign根据服务名查找都是用的全大写
+          lowerCaseServiceId: true
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - OPTIONS
+      routes:
+        - id: 123456
+          uri: lb://JACK-API
+          predicates:
+            - Path=/api/** #判断匹配条件,即地址带有/api/**的请求,会转发至lb:JACK_API
+          filters:
+            - StripPrefix=1
+            - name: JwtManageCheck
+              args:
+                jwtNoCheckPath: "/System/login,/System/logout,/Order/CreateOrder"
+                callBackPathByRsaSignNoEncode: "/System/dc"
+            - name: Hystrix # 使用熔断器 当服务不可用的时候调用某个url
+              enabled: true
+              args:
+                name: fallbackcmd
+                fallbackUri: forward:/fallback
+      hystrix.command.fallbackcmd.execution.isolation.thread.timeoutInMilliseconds: 5000
+
+feign:
+  hystrix:
+    enabled: true
+  client:
+    config:
+      user-client: #调用的服务名称
+        errorDecoder: com.jack.jackgateway.FeignErrorDecoder
+
+
+              #限流开始
+#            - name: RequestRateLimiter
+#              args:
+#                # 使用SpEL名称引用Bean，与上面新建的RateLimiterConfig类中的bean的name相同
+#                key-resolver: '#{@remoteAddrKeyResolver}'
+#                # 每秒最大访问次数
+#                redis-rate-limiter.replenishRate: 10
+#                # 令牌桶最大容量
+#                redis-rate-limiter.burstCapacity: 10
+              #限流结束
+#redis配置
+#  redis:
+#    # Redis数据库索引（默认为0）
+#    database: 10
+#    # Redis服务器连接端口
+#    port: 6379
+#    # Redis服务器连接密码（默认为空）
+#    password: sd888
+#    timeout: 0
+#    url: 47.105.104.145
+#  redis:
+#    host: 47.105.104.145
+#    port: 6379 #端口
+#    password: Ruixin2018
+#    username: ruixin
+#    database: 0 #数据库索引
+#    timeout: 20000ms #连接超时时间
+#    jedis:
+#      pool:
+#        max-active: 8 #连接池最大连接数（使用负值表示没有限制）
+#        max-wait: -1ms #连接池最大阻塞等待时间（使用负值表示没有限制）
+#        max-idle: 8 #连接池中的最大空闲连接
+#        min-idle: 0 #连接池中的最小空闲连接
+eureka:
+  client:
+    service-url:
+      defaultZone: http://admin:admin123@127.0.0.1:8881/eureka
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: false
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+        include=*:
+# 暴露端点
+#management:
+#  endpoints:
+#    web:
+#      exposure:
+#        include: '*'
+#  endpoint:
+#    health:
+#      show-details: always
+#
+## 打印网关日志信息
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: debug
+permission:
+    required: "/api/System/login1,/api/System/dc"

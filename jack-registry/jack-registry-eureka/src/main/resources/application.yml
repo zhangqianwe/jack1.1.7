@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: SPECIALA-REGISTRY-EUREKA
+  security:
+    basic:
+      enabled: true
+    user:
+      name: admin
+      password: admin123
+
+server:
+  port: 8881
+eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ip-address}:${server.port}
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://admin:admin123@localhost:${server.port}/eureka
+
+  server:
+    peer-node-connect-timeout-ms: 5000
+    peer-node-read-timeout-ms: 3000
