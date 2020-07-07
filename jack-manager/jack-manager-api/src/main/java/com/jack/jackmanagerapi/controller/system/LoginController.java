@@ -10,9 +10,7 @@ import com.jack.customPojo.RolePojo;
 import com.jack.jackOnline.Department;
 import com.jack.jackOnline.SysRole;
 import com.jack.jackOnline.SysUser;
-import com.jack.pojo.DepPojo;
-import com.jack.pojo.Menu;
-import com.jack.pojo.User;
+import com.jack.pojo.*;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -31,6 +29,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.*;
 
 //        System.out.println(ZonedDateTime.now(ZoneId.of("Asia/Shanghai")));
@@ -106,8 +105,12 @@ public class LoginController {
         long end = System.currentTimeMillis();
 //
         HashMap<String, Object> hashMap = new HashMap<>();
-        ArrayList<String> rolesList = new ArrayList<>();
-        rolesList.add("system");
+        HashMap<String, Object> rolesMap = new HashMap<>();
+        ArrayList<Object> rolesList = new ArrayList<>();
+//        角色[{"role":"admin","authority":[1,2,3]},{"role":"juese","authority":[1,2,3]}]
+        rolesMap.put("role","admin");
+        rolesMap.put("authority",new int[]{2,3,4,7,8});
+        rolesList.add(rolesMap);
         hashMap.put("roles", rolesList);
         hashMap.put("name", "system");
         hashMap.put("introduction", "zqw");
@@ -116,8 +119,30 @@ public class LoginController {
         return new ResponseMessage(ResponseCode.SUCCESS, hashMap);
     }
 
+
     /**
-     * 获取详细信息
+     *
+     * @param request
+     * @return
+     * @throws InterruptedException
+     * @throws IOException
+     */
+    @RequestMapping(value = "role/generateRoutes")
+    @ResponseBody
+    public ResponseMessage generateRoutes(HttpServletRequest request){
+        MenuPojo menuPojo = new MenuPojo();
+        menuPojo.setAlwaysShow(true);
+        Meta meta = new Meta();
+        meta.setIcon("zip");
+        meta.setTitle("Zip");
+        menuPojo.setMeta(meta);
+        menuPojo.setName("Zip");
+        menuPojo.setPath("/zip");
+        menuPojo.setRedirect("/zip/download");
+        return new ResponseMessage(ResponseCode.SUCCESS, menuPojo);
+    }
+    /**
+     * 退出
      *
      * @param request
      * @return
@@ -198,6 +223,7 @@ public class LoginController {
         SysRole sysRole = new SysRole();
         sysRole.setRoleName(parameter.getRoleName());
         sysRole.setStatus(1);
+
         sysRoleService.save(sysRole);
         return new ResponseMessage(ResponseCode.SUCCESS);
     }
@@ -273,16 +299,15 @@ public class LoginController {
         return new ResponseMessage(ResponseCode.SUCCESS, menuList);
     }
 
+
     /**
-     * 获取路由
-     *
-     * @param request
+     * 获取员工列表
+     * @param pageParam
      * @return
-     * @throws InterruptedException
      */
     @RequestMapping(value = "queryUserList")
     @ResponseBody
-    public ResponseMessage queryUserList(@RequestBody Parameter pageParam) throws InterruptedException {
+    public ResponseMessage queryUserList(@RequestBody Parameter pageParam){
         //        long start = System.currentTimeMillis();
         IPage<SysUser> userMyPage = new Page<SysUser>(pageParam.getPageNum(), pageParam.getPageSize());
         userService.lambdaQuery().orderByAsc(SysUser::getId).page(userMyPage);
@@ -346,18 +371,19 @@ public class LoginController {
 //        list1.add(hashMap);
         return new ResponseMessage(ResponseCode.SUCCESS, list);
     }
-
     /**
      * 获取路由
-     *
-     * @param request
+     * @param pageParam
      * @return
-     * @throws InterruptedException
      */
     @RequestMapping(value = "dept/queryDeptTree")
     @ResponseBody
-    public ResponseMessage queryDeptTree(HttpServletRequest request) throws InterruptedException {
-        List<DepPojo> menuList = departmentService.getAllDep("");
+    public ResponseMessage queryDeptTree(@RequestBody Parameter pageParam ){
+        String deptId = "";
+        if(StringUtils.isNotBlank(pageParam.getDeptId())){
+            deptId = pageParam.getDeptId();
+        }
+        List<DepPojo> menuList = departmentService.getAllDep(deptId);
 
 
 //        List<Object> list = new ArrayList<>();
@@ -395,7 +421,7 @@ public class LoginController {
      * @param pageParam
      * @return
      */
-    @RequestMapping(value = "addDept")
+    @RequestMapping(value = "dept/addDept")
     @ResponseBody
     public ResponseMessage addDept(@RequestBody Parameter pageParam, HttpServletRequest request) {
         Department department = new Department();
@@ -410,10 +436,12 @@ public class LoginController {
         department.setCreateTime(new Date());
         department.setDepType(1);
         department.setStatus(1);
+        department.setPid(pageParam.getPid());
         if (pageParam.getPid() != 0) {
             department.setPid(pageParam.getPid());
             department.setDepType(0);
         }
+
         boolean save = departmentService.save(department);
         if (!save) {
             return new ResponseMessage(ResponseCode.FALSE, "保存失败！");
@@ -445,5 +473,29 @@ public class LoginController {
         return new ResponseMessage(ResponseCode.SUCCESS);
     }
 
+
+    /**
+     * 增加部门
+     *
+     * @param pageParam
+     * @return
+     */
+    @RequestMapping(value = "dept/updateDept")
+    @ResponseBody
+    public ResponseMessage updateDept(@RequestBody Parameter pageParam, HttpServletRequest request) {
+        Department department = new Department();
+        department.setDeptId(Integer.parseInt(pageParam.getDeptId()));
+        department.setPid(pageParam.getPid());
+        department.setName(pageParam.getName());
+        department.setLevel(pageParam.getLevel());
+        department.setUpdateTime(new Date());
+        department.setStatus(1);
+        boolean b = departmentService.updateById(department);
+        if(!b){
+            return new ResponseMessage(ResponseCode.FALSE,"错误");
+        }
+
+        return new ResponseMessage(ResponseCode.SUCCESS);
+    }
 
 }

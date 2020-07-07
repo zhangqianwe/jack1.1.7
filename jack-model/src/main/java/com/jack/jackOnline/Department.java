@@ -1,5 +1,7 @@
 package com.jack.jackOnline;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.jack.domain.BaseModel;
 import lombok.Data;
@@ -16,6 +18,7 @@ public class Department extends BaseModel {
     // 确保反序列化不会出现异常, 该字段只能在当前类中有效, 抽象到父类中是无效的
     private static final long serialVersionUID = 1L;
     //主键
+    @TableId(value = "dept_Id",type = IdType.AUTO)
     private Integer deptId;
     //部门名字
     private String name;

@@ -3,15 +3,9 @@ package com.jack.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.jack.jackOnline.Department;
-import com.jack.jackOnline.SysMenu;
 import com.jack.mapper.DepartmentMapper;
-import com.jack.mapper.SysMenuMapper;
 import com.jack.pojo.DepPojo;
-import com.jack.pojo.Menu;
-import com.jack.pojo.Meta;
-import com.jack.pojo.Sort;
 import com.jack.service.DepartmentService;
-import com.jack.service.SysMenuService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -54,10 +48,11 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 //        List<Department> childlist = allDep.stream().filter(Department -> Department.getDepType() == 0).collect(Collectors.toList());
         QueryWrapper<Department> vQueryWrapper = new QueryWrapper<>();
         departmentQueryWrapper.eq("status", 1);
-        departmentQueryWrapper.eq("depType", 0);
+        departmentQueryWrapper.eq("dep_Type", 0);
 
         //拿到所有部门
-        List<Department> childlist = departmentMapper.selectList(vQueryWrapper);
+//        List<Department> childlist = departmentMapper.selectList(vQueryWrapper);
+        List<DepPojo> childlist = getParentNode(allDep, 0,dep);
         System.out.println("父节点信息" + parentlist.toString());
         System.out.println("子节点信息" + childlist.toString());
         getChildNode(parentlist, childlist);
@@ -65,21 +60,23 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         return parentlist;
     }
 
-    private void getChildNode(List<DepPojo> parentlist, List<Department> childlist) {
+    private void getChildNode(List<DepPojo> parentlist, List<DepPojo> childlist) {
         parentlist.forEach(parent ->{
-            List<Department> collect = childlist.stream().filter(Department ->
+            if(childlist.size()==0){return;}
+            List<DepPojo> collect = childlist.stream().filter(Department ->
                     Department.getPid().longValue() == parent.getId().longValue()
             ).collect(Collectors.toList());
             if(collect.size()>0){
                 List<DepPojo> list = new ArrayList<>();
                 collect.stream().forEach(e->{
-                    DepPojo depPojo = new DepPojo(e.getDeptId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
+                    DepPojo depPojo = new DepPojo(e.getId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
                     list.add(depPojo);
                 });
                 Collections.sort(list);
                 parent.setChildren(list);
                 getChildNode(parent.getChildren(), childlist);
             }
+
         });
 
     }

@@ -77,15 +77,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         }
         IPage<Map<String, Object>> mapIPage = userMapper.selectMapsPage(new Page<>(pageParam.getPageNum(), pageParam.getPageSize()), queryWrapper);
         List<Map<String, Object>> records = mapIPage.getRecords();
-        records.forEach(e -> {
-            Integer dept_id = (Integer) e.get("dept_id");
-            QueryWrapper<Department> objectQueryWrapper = new QueryWrapper<>();
-            objectQueryWrapper.eq("dept_id", dept_id);
-
-            Department dep = departmentService.getOne(objectQueryWrapper,
-                    true);
-            e.put("deptName", dep.getName());
-        });
+//        records.forEach(e -> {
+//            Integer dept_id = (Integer) e.get("id");
+//            QueryWrapper<Department> objectQueryWrapper = new QueryWrapper<>();
+//            objectQueryWrapper.eq("dept_id", dept_id);
+//
+//            Department dep = departmentService.getOne(objectQueryWrapper,
+//                    true);
+//            e.put("deptName", dep.getName());
+//        });
         return mapIPage;
     }
 
@@ -131,18 +131,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     @Override
     public ResponseMessage selectByUserNameAndPassWord(String userName, String passWord) throws Exception {
         HashMap<String, Object> hashMap = new HashMap<>();
-        hashMap.put("errMsg",false);
         QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("login_name", userName)
                 .eq("password", passWord);
 //                .eq("status", 1);
         SysUser user = userMapper.selectOne(queryWrapper);
-        if(user.getStatus()==2){
-            return new ResponseMessage(ResponseCode.USER_NOT_ACTIVE);
-        }
         if (null == user) {
             return new ResponseMessage(ResponseCode.PASSWORD_AND_USERNAME_FAIL);
         }
+        if(user.getStatus()==2){
+            return new ResponseMessage(ResponseCode.USER_NOT_ACTIVE);
+        }
+
         String token = JwtManageTool.createToken(user.getId().longValue(), user.getRealname(), user.getTelphone());
         UserPojo userPojo = new UserPojo();
         userPojo.setName(user.getRealname());
