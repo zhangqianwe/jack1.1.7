@@ -110,7 +110,7 @@ public class LoginController {
         ArrayList<Object> rolesList = new ArrayList<>();
 //        角色[{"role":"admin","authority":[1,2,3]},{"role":"juese","authority":[1,2,3]}]
         rolesMap.put("role", "admin");
-        rolesMap.put("authority", new int[]{2, 3, 5, 6, 7, 8});
+        rolesMap.put("authority", new int[]{2, 3, 5, 6, 7, 8,9});
         rolesList.add(rolesMap);
         hashMap.put("roles", rolesList);
         hashMap.put("name", "system");
