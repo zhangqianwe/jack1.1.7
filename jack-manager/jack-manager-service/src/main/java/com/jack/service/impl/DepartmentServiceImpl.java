@@ -26,18 +26,14 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
     @Autowired
     private DepartmentMapper departmentMapper;
-    @Override
-    public List<Department> getRoutes(String s) {
-        return null;
-    }
 
     @Override
     public List<DepPojo> getAllDep(String dep) {
         QueryWrapper<Department> departmentQueryWrapper = new QueryWrapper<>();
         departmentQueryWrapper.eq("status", 1);
-        if(StringUtils.isNotBlank(dep)){
-            departmentQueryWrapper.eq("dept_Id",Integer.parseInt(dep));
-        }
+//        if(StringUtils.isNotBlank(dep)){
+//            departmentQueryWrapper.eq("dept_Id",Integer.parseInt(dep));
+//        }
         //拿到所有部门
         List<Department> allDep = departmentMapper.selectList(departmentQueryWrapper);
         //1先拿到所有的父节点
@@ -52,7 +48,10 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
 
         //拿到所有部门
 //        List<Department> childlist = departmentMapper.selectList(vQueryWrapper);
-        List<DepPojo> childlist = getParentNode(allDep, 0,dep);
+//        QueryWrapper<Department> departmentQuery = new QueryWrapper<>();
+//        departmentQuery.eq("status", 1);
+//        List<Department> childlistDep = departmentMapper.selectList(departmentQueryWrapper);
+        List<DepPojo> childlist = getParentNode(allDep, 0,"");
         System.out.println("父节点信息" + parentlist.toString());
         System.out.println("子节点信息" + childlist.toString());
         getChildNode(parentlist, childlist);
@@ -69,7 +68,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             if(collect.size()>0){
                 List<DepPojo> list = new ArrayList<>();
                 collect.stream().forEach(e->{
-                    DepPojo depPojo = new DepPojo(e.getId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
+                    DepPojo depPojo = new DepPojo(e.getId(),e.getId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
                     list.add(depPojo);
                 });
                 Collections.sort(list);
@@ -91,15 +90,16 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
     private List<DepPojo> getParentNode(List<Department> allDep, int depType, String dep) {
         List<DepPojo> menuList = new ArrayList<>();
         if(StringUtils.isEmpty(dep)){
-            List<Department> collect = allDep.stream().filter(Department -> Department.getDepType() == depType).collect(Collectors.toList());
+
+            List<Department> collect = allDep.stream().filter(Department -> Department.getDepType() == depType ).collect(Collectors.toList());
             collect.forEach(e->{
-                DepPojo depPojo = new DepPojo(e.getDeptId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
+                DepPojo depPojo = new DepPojo(e.getDeptId(),e.getDeptId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
                 menuList.add(depPojo);
             });
         }else{
             List<Department> collect = allDep.stream().filter(Department -> Department.getDeptId() == Integer.parseInt(dep)).collect(Collectors.toList());
             collect.forEach(e->{
-                DepPojo depPojo = new DepPojo(e.getDeptId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
+                DepPojo depPojo = new DepPojo(e.getDeptId(),e.getDeptId(),e.getName(),e.getPid(),e.getName(),e.getLevel());
                 menuList.add(depPojo);
             });
         }

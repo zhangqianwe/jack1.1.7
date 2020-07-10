@@ -26,6 +26,8 @@ public class SysUser extends BaseModel {
 
     private String realname;
 
+    private String name;
+
     private String icon;
 
     private String guid;

@@ -10,14 +10,12 @@ import com.jack.customPojo.RolePojo;
 import com.jack.jackOnline.Department;
 import com.jack.jackOnline.SysRole;
 import com.jack.jackOnline.SysUser;
+import com.jack.jackOnline.SysUserRole;
 import com.jack.pojo.*;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.jack.service.DepartmentService;
-import com.jack.service.SysMenuService;
-import com.jack.service.SysRoleService;
-import com.jack.service.UserService;
+import com.jack.service.*;
 import com.jack.common.jwt.JwtManageTool;
 import com.jack.utils.MD5;
 import com.jack.utils.TimeUtils;
@@ -42,6 +40,7 @@ import java.util.*;
  */
 
 
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Controller
 @Slf4j
 @RequestMapping("/System")
@@ -55,6 +54,8 @@ public class LoginController {
     private DepartmentService departmentService;
     @Autowired
     private SysRoleService sysRoleService;
+    @Autowired
+    private SysUserRoleService sysUserRoleService;
 
     /**
      * 登录
@@ -108,8 +109,8 @@ public class LoginController {
         HashMap<String, Object> rolesMap = new HashMap<>();
         ArrayList<Object> rolesList = new ArrayList<>();
 //        角色[{"role":"admin","authority":[1,2,3]},{"role":"juese","authority":[1,2,3]}]
-        rolesMap.put("role","admin");
-        rolesMap.put("authority",new int[]{2,3,4,7,8});
+        rolesMap.put("role", "admin");
+        rolesMap.put("authority", new int[]{2, 3, 5, 6, 7, 8});
         rolesList.add(rolesMap);
         hashMap.put("roles", rolesList);
         hashMap.put("name", "system");
@@ -121,7 +122,6 @@ public class LoginController {
 
 
     /**
-     *
      * @param request
      * @return
      * @throws InterruptedException
@@ -129,7 +129,7 @@ public class LoginController {
      */
     @RequestMapping(value = "role/generateRoutes")
     @ResponseBody
-    public ResponseMessage generateRoutes(HttpServletRequest request){
+    public ResponseMessage generateRoutes(HttpServletRequest request) {
         MenuPojo menuPojo = new MenuPojo();
         menuPojo.setAlwaysShow(true);
         Meta meta = new Meta();
@@ -141,6 +141,7 @@ public class LoginController {
         menuPojo.setRedirect("/zip/download");
         return new ResponseMessage(ResponseCode.SUCCESS, menuPojo);
     }
+
     /**
      * 退出
      *
@@ -163,7 +164,7 @@ public class LoginController {
      * @return
      * @throws InterruptedException
      */
-    @RequestMapping("/addUser")
+    @RequestMapping("user/addUser")
     @ResponseBody
     public ResponseMessage addUser(@RequestBody Parameter parameter) throws InterruptedException {
         SysUser sysUser = new SysUser();
@@ -181,6 +182,41 @@ public class LoginController {
         sysUser.setPassword(MD5.getMD5String(sysUser.getLogin_name() + TimeUtils.getSysYear()));
         sysUser.setCreateTime(new Date());
         userService.save(sysUser);
+        parameter.getRoleId().forEach(e->{
+            SysUserRole sysUserRole = new SysUserRole();
+            sysUserRole.setRole_id(e);
+            sysUserRole.setUser_id(sysUser.getId());
+            sysUserRole.setStatus(1);
+            sysUserRole.setCreateTime(new Date());
+            sysUserRoleService.save(sysUserRole);
+        });
+
+
+        return new ResponseMessage(ResponseCode.SUCCESS);
+    }
+
+    /**
+     * 重置密码
+     *
+     * @return
+     * @throws InterruptedException
+     */
+    @RequestMapping("user/resetPassword")
+    @ResponseBody
+    public ResponseMessage resetPassword(@RequestBody Parameter parameter) {
+        String[] split = parameter.getUserIds().split(",");
+        String password = parameter.getPassword();
+        System.out.println("split: "+ split);
+        System.out.println("password"+ password);
+        System.out.println("password(加密后)"+ MD5.getMD5String(password));
+
+        for (String s : split) {
+            SysUser sysUser = new SysUser();
+            sysUser.setId(Integer.parseInt(s));
+            sysUser.setPassword(MD5.getMD5String(password));
+            sysUser.setUpdateTime(new Date());
+            userService.updateById(sysUser);
+        }
 
         return new ResponseMessage(ResponseCode.SUCCESS);
     }
@@ -268,6 +304,7 @@ public class LoginController {
 
     /**
      * 角色绑定员工
+     *
      * @param
      * @return
      */
@@ -276,12 +313,11 @@ public class LoginController {
     public ResponseMessage roleRelatedUser(@RequestBody Parameter parameter) {
         String roleIds = parameter.getRoleIds();
         String[] split = parameter.getUserIds().split(",");
-        System.out.println("角色ID"+roleIds);
-        System.out.println("用户ID"+split);
+        System.out.println("角色ID" + roleIds);
+        System.out.println("用户ID" + split);
         List<RolePojo> List = sysRoleService.getRoleList();
         return new ResponseMessage(ResponseCode.SUCCESS, List);
     }
-
 
 
     /**
@@ -302,12 +338,13 @@ public class LoginController {
 
     /**
      * 获取员工列表
+     *
      * @param pageParam
      * @return
      */
     @RequestMapping(value = "queryUserList")
     @ResponseBody
-    public ResponseMessage queryUserList(@RequestBody Parameter pageParam){
+    public ResponseMessage queryUserList(@RequestBody Parameter pageParam) {
         //        long start = System.currentTimeMillis();
         IPage<SysUser> userMyPage = new Page<SysUser>(pageParam.getPageNum(), pageParam.getPageSize());
         userService.lambdaQuery().orderByAsc(SysUser::getId).page(userMyPage);
@@ -342,6 +379,7 @@ public class LoginController {
 
     /**
      * 角色跟员工关联，员工查询
+     *
      * @param pageParam
      * @return
      * @throws InterruptedException
@@ -371,16 +409,18 @@ public class LoginController {
 //        list1.add(hashMap);
         return new ResponseMessage(ResponseCode.SUCCESS, list);
     }
+
     /**
      * 获取路由
+     *
      * @param pageParam
      * @return
      */
     @RequestMapping(value = "dept/queryDeptTree")
     @ResponseBody
-    public ResponseMessage queryDeptTree(@RequestBody Parameter pageParam ){
+    public ResponseMessage queryDeptTree(@RequestBody Parameter pageParam) {
         String deptId = "";
-        if(StringUtils.isNotBlank(pageParam.getDeptId())){
+        if (StringUtils.isNotBlank(pageParam.getDeptId())) {
             deptId = pageParam.getDeptId();
         }
         List<DepPojo> menuList = departmentService.getAllDep(deptId);
@@ -491,8 +531,8 @@ public class LoginController {
         department.setUpdateTime(new Date());
         department.setStatus(1);
         boolean b = departmentService.updateById(department);
-        if(!b){
-            return new ResponseMessage(ResponseCode.FALSE,"错误");
+        if (!b) {
+            return new ResponseMessage(ResponseCode.FALSE, "错误");
         }
 
         return new ResponseMessage(ResponseCode.SUCCESS);

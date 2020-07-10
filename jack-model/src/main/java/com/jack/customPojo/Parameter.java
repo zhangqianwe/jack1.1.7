@@ -13,6 +13,7 @@ import java.util.List;
 @Data
 public class Parameter extends PageParam {
     private String deptId;
+    private List<Integer>deptIds;
     private String status;
     private String name;
     private Integer pid;
@@ -32,6 +33,7 @@ public class Parameter extends PageParam {
     private Integer sysRoleId;
 
     private String userIds;
+
 
 
 

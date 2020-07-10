@@ -14,10 +14,12 @@ import com.jack.customPojo.Parameter;
 import com.jack.customPojo.UserPojo;
 import com.jack.jackOnline.Department;
 import com.jack.jackOnline.SysUser;
+import com.jack.jackOnline.SysUserRole;
 import com.jack.mapper.UserMapper;
 import com.jack.pojo.DepPojo;
 import com.jack.pojo.User;
 import com.jack.service.DepartmentService;
+import com.jack.service.SysUserRoleService;
 import com.jack.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -45,6 +47,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     private UserMapper userMapper;
     @Autowired
     private DepartmentService departmentService;
+    @Autowired
+    private SysUserRoleService sysUserRoleService;
 
 
     @Override
@@ -65,27 +69,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         if (StringUtils.isNotBlank(pageParam.getStatus())) {
             queryWrapper.eq("status", pageParam.getStatus());
         }
+
         if (StringUtils.isNotBlank(pageParam.getDeptId())) {
             //拿到此部门一下所有部门id
             List<DepPojo> allDep = departmentService.getAllDep(pageParam.getDeptId());
             List<Integer> deptzId = new ArrayList<>();
+            List<Integer> listID = getListID(allDep, deptzId);
+            System.out.println("查询： "+listID.toString());
+
             queryWrapper.in("dept_Id", getListID(allDep,deptzId));
         }
         if(StringUtils.isNotBlank(pageParam.getRealname())){
-
             queryWrapper.like("name",pageParam.getRealname());
         }
         IPage<Map<String, Object>> mapIPage = userMapper.selectMapsPage(new Page<>(pageParam.getPageNum(), pageParam.getPageSize()), queryWrapper);
         List<Map<String, Object>> records = mapIPage.getRecords();
-//        records.forEach(e -> {
-//            Integer dept_id = (Integer) e.get("id");
-//            QueryWrapper<Department> objectQueryWrapper = new QueryWrapper<>();
-//            objectQueryWrapper.eq("dept_id", dept_id);
-//
-//            Department dep = departmentService.getOne(objectQueryWrapper,
-//                    true);
-//            e.put("deptName", dep.getName());
-//        });
+        records.forEach(e -> {
+            QueryWrapper<Department> objectQueryWrapper = new QueryWrapper<>();
+            objectQueryWrapper.eq("dept_id", e.get("dept_id"));
+
+            Department dep = departmentService.getOne(objectQueryWrapper,
+                    true);
+            e.put("deptName", dep.getName());
+
+            QueryWrapper<SysUserRole> sysUserRoleWrapper = new QueryWrapper<>();
+            sysUserRoleWrapper.eq("status",1);
+            sysUserRoleWrapper.eq("user_id",e.get("ID"));
+            List<SysUserRole> list = sysUserRoleService.list(sysUserRoleWrapper);
+            List<String> roleList = new ArrayList<>();
+            roleList.add("系统管理员,");
+            roleList.add("业务人员,");
+            roleList.add("业务人员1");
+            e.put("roleName", roleList);
+        });
         return mapIPage;
     }
 
@@ -113,9 +129,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         for (DepPojo pojo : depPojo) {
             integers.add(pojo.getId());
             if (pojo.getChildren().size()>0){
-                for (DepPojo child : pojo.getChildren()) {
-                    integers.add(child.getId());
-                }
+                getListID(pojo.getChildren(),integers);
+//                for (DepPojo child : pojo.getChildren()) {
+//                    integers.add(child.getId());
+//
+//                }
             }
         }
         return integers;

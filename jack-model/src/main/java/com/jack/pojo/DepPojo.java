@@ -15,6 +15,8 @@ import java.util.List;
 public class DepPojo implements Comparable<DepPojo> {
     //主键
     private Integer id;
+
+    private Integer value;
     //部门名字
     private String name;
     //上级部门
@@ -23,8 +25,9 @@ public class DepPojo implements Comparable<DepPojo> {
     private Integer level;
     private List<DepPojo> children=new ArrayList<>();
 
-    public DepPojo(Integer id, String name, Integer pid, String label,Integer level) {
+    public DepPojo(Integer id, Integer value, String name, Integer pid, String label,Integer level) {
         this.id = id;
+        this.value = value;
         this.name = name;
         this.pid = pid;
         this.label = label;

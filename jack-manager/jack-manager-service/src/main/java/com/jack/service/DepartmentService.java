@@ -13,7 +13,7 @@ import java.util.List;
  * @Description:
  */
 public interface DepartmentService extends IService<Department> {
-    List<Department> getRoutes(String s);
+
 
     List<DepPojo> getAllDep(String s);
 }
