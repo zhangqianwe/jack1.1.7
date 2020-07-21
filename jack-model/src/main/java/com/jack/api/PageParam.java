@@ -24,6 +24,10 @@ public class PageParam implements Serializable {
      */
     private Integer pageSize;
 
+    private Integer off_set;
+
+
+
     /**
      * 当前偏移量
      */

@@ -1,12 +1,10 @@
 package com.jack.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jack.api.PageParam;
 import com.jack.api.ResponseCode;
 import com.jack.api.ResponseMessage;
 import com.jack.common.jwt.JwtManageTool;
@@ -15,25 +13,20 @@ import com.jack.customPojo.UserPojo;
 import com.jack.jackOnline.Department;
 import com.jack.jackOnline.SysUser;
 import com.jack.jackOnline.SysUserRole;
+import com.jack.mapper.RedisMapper;
 import com.jack.mapper.UserMapper;
 import com.jack.pojo.DepPojo;
-import com.jack.pojo.User;
 import com.jack.service.DepartmentService;
 import com.jack.service.SysUserRoleService;
 import com.jack.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * @Auther: zhangqianwen
@@ -49,38 +42,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
     private DepartmentService departmentService;
     @Autowired
     private SysUserRoleService sysUserRoleService;
-
-
-    @Override
-    public User getById2(int i) {
-//        IPage<User> page = new Page<>(1, 20);
-//        userMapper.lambdaQuery()
-//                // todo 填充 wrapper 的全部条件
-//                .orderByDesc(OrderProductBo::getId)
-//                .page(page);
-        return new User();
-    }
+    @Autowired
+    private RedisMapper redisMapper;
 
     @Override
     public IPage<Map<String, Object>> userService(Parameter pageParam) {
         QueryWrapper<SysUser> queryWrapper = new QueryWrapper<>();
-
-
         if (StringUtils.isNotBlank(pageParam.getStatus())) {
             queryWrapper.eq("status", pageParam.getStatus());
         }
-
         if (StringUtils.isNotBlank(pageParam.getDeptId())) {
             //拿到此部门一下所有部门id
             List<DepPojo> allDep = departmentService.getAllDep(pageParam.getDeptId());
             List<Integer> deptzId = new ArrayList<>();
             List<Integer> listID = getListID(allDep, deptzId);
             System.out.println("查询： "+listID.toString());
-
             queryWrapper.in("dept_Id", getListID(allDep,deptzId));
         }
         if(StringUtils.isNotBlank(pageParam.getRealname())){
-            queryWrapper.like("name",pageParam.getRealname());
+            queryWrapper.like("realname",pageParam.getRealname());
         }
         IPage<Map<String, Object>> mapIPage = userMapper.selectMapsPage(new Page<>(pageParam.getPageNum(), pageParam.getPageSize()), queryWrapper);
         List<Map<String, Object>> records = mapIPage.getRecords();
@@ -166,8 +146,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         userPojo.setName(user.getRealname());
         userPojo.setMobile(user.getTelphone());
         userPojo.setOrgCode(user.getRoleCode());
+        HashMap<String,Object> userToken = new HashMap<>();
+        HashMap<String,Object> userinfor = new HashMap<>();
+        userinfor.put("token",token);
+        userinfor.put("timeOut",new Date().getTime()+7200);
+        userinfor.put("loginTime",new Date().getTime());
+        userinfor.put("userName",user.getRealname());
+        userinfor.put("client","JACK-API");
+        userToken.put(user.getId().toString(),userinfor);
+//        redisMapper.set("tokenUsers",JSON.toJSON(userToken),7200);
+//        System.out.println("redis过期时间  ： "+redisMapper.getExpire("tokenUsers"));
+        System.out.println("redis:  "+user.getId().toString());
+
         hashMap.put("token", token);
         hashMap.put("userInfor", userPojo);
+        //登录日志
+
         return new ResponseMessage(ResponseCode.SUCCESS,hashMap);
     }
 
@@ -176,6 +170,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, SysUser> implements
         QueryWrapper<SysUser> queryWrapper = new QueryWrapper();
         queryWrapper.eq("status",1);
         return userMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Integer selectByPrimaryKey() {
+        return userMapper.selectByPrimaryKey();
+    }
+
+    @Override
+    public List<SysUser> selectBu() {
+        return userMapper.selectBu();
+    }
+
+    /**
+     * 可以多表联合查询分页
+     * @param pageParam
+     * @return
+     */
+    @Override
+    public Page<SysUser> selectPage(Parameter pageParam) {
+        Page<SysUser> page = new Page<>();
+        page.setRecords(userMapper.selectPage(pageParam));
+        page.setTotal(userMapper.selectBu().size());
+        page.setCurrent(pageParam.getPageNum());
+        return page;
     }
 
     public static String getMD5String(String str) {

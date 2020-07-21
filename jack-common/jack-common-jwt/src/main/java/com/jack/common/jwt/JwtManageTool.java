@@ -26,7 +26,7 @@ public class JwtManageTool {
             "RoRYsai1kDCVuRHfB4tiYLVMu40tl4oXMwgeU191ZnUvaJBI1YJHVunkbwIDAQABqLl6ECQQDXAOTSaBM4ROOV";
     /*token 过期时间: 7200秒 */
     public static final int calendarField = Calendar.SECOND;
-    public static final int calendarInterval = 43200;
+    public static final int calendarInterval = 1000;
 
     /**
      *
@@ -232,6 +232,12 @@ public class JwtManageTool {
         else {
             return null;
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        String token = createToken(12l, "张倩文", "cccc");
+        System.out.println(token);
+//        getUserId("")
     }
 
 }

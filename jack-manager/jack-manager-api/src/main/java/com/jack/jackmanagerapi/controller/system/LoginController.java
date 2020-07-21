@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.jack.api.ResponseCode;
 import com.jack.api.ResponseMessage;
+import com.jack.common.jwt.JwtManageTool;
 import com.jack.common.jwt.JwtTool;
 import com.jack.customPojo.Parameter;
 import com.jack.customPojo.RolePojo;
@@ -11,12 +12,10 @@ import com.jack.jackOnline.Department;
 import com.jack.jackOnline.SysRole;
 import com.jack.jackOnline.SysUser;
 import com.jack.jackOnline.SysUserRole;
+import com.jack.jackmanagerapi.controller.aspectj.LogRecord;
+import com.jack.mapper.RedisMapper;
 import com.jack.pojo.*;
-
-import javax.servlet.http.HttpServletRequest;
-
 import com.jack.service.*;
-import com.jack.common.jwt.JwtManageTool;
 import com.jack.utils.MD5;
 import com.jack.utils.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -24,22 +23,22 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.io.IOException;
-import java.lang.reflect.Array;
+import javax.servlet.ServletInputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.io.*;
 import java.util.*;
 
-//        System.out.println(ZonedDateTime.now(ZoneId.of("Asia/Shanghai")));
-//        System.out.println(LocalDateTime.now(ZoneId.of("Asia/Shanghai")));
 
 /**
  * @Auther: zhangqianwen
  * @Date: 2020/6/11 14:31
  * @Description:
  */
-
-
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @Controller
 @Slf4j
@@ -56,6 +55,8 @@ public class LoginController {
     private SysRoleService sysRoleService;
     @Autowired
     private SysUserRoleService sysUserRoleService;
+    @Autowired
+    private RedisMapper redisMapper;
 
     /**
      * 登录
@@ -65,24 +66,49 @@ public class LoginController {
      */
     @RequestMapping("login")
     @ResponseBody
-    public ResponseMessage login(@RequestBody User user) throws Exception {
-        log.info("登录来了");
-        HashMap<String, Object> hashMap = new HashMap<>();
+    @LogRecord
+    public ResponseMessage login(@RequestBody User user, HttpServletRequest request) throws Exception {
+//        String body = getStringFromStream(request);
+//        BufferedReader reader = request.getReader();
+
+//        List<SysUser> sysUser1 = userService.selectBu();
+//        Parameter pageParam = new Parameter();
+//        if (pageParam.getPageNum() == null || pageParam.getPageNum().intValue() < 1) {
+//            pageParam.setPageNum(1);
+//        }
+//        if (pageParam.getPageSize() == null || pageParam.getPageSize().intValue() <= 20) {
+//            pageParam.setPageSize(20);
+//
+//        }
+//        pageParam.setOff_set((pageParam.getPageNum().intValue() - 1) * pageParam.getPageSize().intValue());
+//        Page<SysUser> page = userService.selectPage(pageParam);
+
         if (StringUtils.isBlank(user.getUsername())) {
             return new ResponseMessage(ResponseCode.USER_NAME_PASSWORD_FALSE, "用户名或密码不正确!");
         }
         if (StringUtils.isBlank(user.getPassword())) {
             return new ResponseMessage(ResponseCode.USER_NAME_PASSWORD_FALSE, "用户名或密码不正确!");
         }
+
+//        InetAddress ip4 = Inet4Address.getLocalHost();
+//        System.out.println("IP： " + ip4.getHostAddress());
+//        String ua = request.getHeader("User-Agent");
+//        //获取浏览器信息
+//        //转成UserAgent对象
+//        UserAgent userAgent = UserAgent.parseUserAgentString(ua);
+//        //获取浏览器信息
+//        Browser browser = userAgent.getBrowser();
+//        //获取系统信息
+//        OperatingSystem os = userAgent.getOperatingSystem();
+//        //系统名称
+//        String system = os.getName();
+//        //浏览器名称
+//        String browserName = browser.getName();
+//
+//        System.out.println("浏览器信息： " + system +browserName);
+
+
         return userService.selectByUserNameAndPassWord(user.getUsername(), user.getPassword());
-//        if ((Boolean) objectHashMap.get("errMsg")) {
-//            return new ResponseMessage(ResponseCode.USER_NOT_ACTIVE,objectHashMap.get("msg"));
-//        }
-//        hashMap.put("token", objectHashMap.get("token"));
-//        hashMap.put("userInfor", objectHashMap.get("userInfor"));
-
-
-//        return new ResponseMessage(ResponseCode.SUCCESS, objectHashMap);
     }
 
     /**
@@ -98,19 +124,18 @@ public class LoginController {
         long start = System.currentTimeMillis();
         Long userIdByAuthorization = JwtManageTool.getUserIdByAuthorization(request);
         log.info("获取详细信息来了" + userIdByAuthorization);
-
+        HttpSession session = request.getSession();
+        String id = session.getId();
+        System.out.println("sessionID" + id);
         if (null == userIdByAuthorization) {
             return new ResponseMessage(ResponseCode.TOKEN_ERROR);
         }
-        Map<String, Object> sysUserInfoByAuthorization = JwtManageTool.getSysUserInfoByAuthorization(request);
-        long end = System.currentTimeMillis();
-//
         HashMap<String, Object> hashMap = new HashMap<>();
         HashMap<String, Object> rolesMap = new HashMap<>();
         ArrayList<Object> rolesList = new ArrayList<>();
 //        角色[{"role":"admin","authority":[1,2,3]},{"role":"juese","authority":[1,2,3]}]
         rolesMap.put("role", "admin");
-        rolesMap.put("authority", new int[]{2, 3, 5, 6, 7, 8,9});
+        rolesMap.put("authority", new int[]{2, 3, 5, 6, 7, 8, 9});
         rolesList.add(rolesMap);
         hashMap.put("roles", rolesList);
         hashMap.put("name", "system");
@@ -147,13 +172,12 @@ public class LoginController {
      *
      * @param request
      * @return
-     * @throws InterruptedException
      */
     @RequestMapping(value = "logout")
     @ResponseBody
-    public ResponseMessage logout(HttpServletRequest request) throws InterruptedException, IOException {
-//        MQUtils mqUtils =new MQUtils();
-//        Map<String, Integer> mqCountMap = mqUtils.getMQCountMap("jack");
+    public ResponseMessage logout(HttpServletRequest request) {
+        Long userIdByAuthorization = JwtManageTool.getUserIdByAuthorization(request);
+//        redisMapper.del(userIdByAuthorization.toString());
         return new ResponseMessage(ResponseCode.SUCCESS, "退出成功!");
     }
 
@@ -182,7 +206,7 @@ public class LoginController {
         sysUser.setPassword(MD5.getMD5String(sysUser.getLogin_name() + TimeUtils.getSysYear()));
         sysUser.setCreateTime(new Date());
         userService.save(sysUser);
-        parameter.getRoleId().forEach(e->{
+        parameter.getRoleId().forEach(e -> {
             SysUserRole sysUserRole = new SysUserRole();
             sysUserRole.setRole_id(e);
             sysUserRole.setUser_id(sysUser.getId());
@@ -206,9 +230,9 @@ public class LoginController {
     public ResponseMessage resetPassword(@RequestBody Parameter parameter) {
         String[] split = parameter.getUserIds().split(",");
         String password = parameter.getPassword();
-        System.out.println("split: "+ split);
-        System.out.println("password"+ password);
-        System.out.println("password(加密后)"+ MD5.getMD5String(password));
+        System.out.println("split: " + split);
+        System.out.println("password" + password);
+        System.out.println("password(加密后)" + MD5.getMD5String(password));
 
         for (String s : split) {
             SysUser sysUser = new SysUser();
@@ -345,34 +369,9 @@ public class LoginController {
     @RequestMapping(value = "queryUserList")
     @ResponseBody
     public ResponseMessage queryUserList(@RequestBody Parameter pageParam) {
-        //        long start = System.currentTimeMillis();
-        IPage<SysUser> userMyPage = new Page<SysUser>(pageParam.getPageNum(), pageParam.getPageSize());
-        userService.lambdaQuery().orderByAsc(SysUser::getId).page(userMyPage);
+//        IPage<SysUser> userMyPage = new Page<SysUser>(pageParam.getPageNum(), pageParam.getPageSize());
+//        userService.lambdaQuery().orderByAsc(SysUser::getId).page(userMyPage);
         IPage<Map<String, Object>> mapIPage = userService.userService(pageParam);
-//        Page page=new Page(pageParam.getPageNum(),pageParam.getPageSize());          //1表示当前页，而10表示每页的显示显示的条目数
-//        IPage iPage = userService.selectUserPage(page, "NORMAL");
-//        long end = System.currentTimeMillis();
-//        System.out.println("总条数 ------> " + userMyPage.getRecords().size());
-//        System.out.println("当前页数 ------> " + userMyPage.getCurrent());
-//        System.out.println("当前每页显示数 ------> " + userMyPage.getSize());
-//        List<Object> list = new ArrayList<>();
-//        HashMap<String, Object> hashMap = new HashMap<>();
-//        hashMap.put("deptName", "测试一123");
-//        hashMap.put("img", null);
-//        hashMap.put("createTime", "2019-01-29 17:14:47");
-//        hashMap.put("roleId", "25");
-//        hashMap.put("mobile", "1233");
-//        hashMap.put("realname", "张倩文");
-//        hashMap.put("parentName", null);
-//        hashMap.put("post", "员工");
-//        hashMap.put("userId", 2);
-//        hashMap.put("parentId", null);
-//        hashMap.put("roleName", "测试角色");
-//        hashMap.put("deptId", 36);
-//        hashMap.put("email", "54556@qq.com");
-//        hashMap.put("username", "15589654126");
-//        hashMap.put("status", 1);
-//        list.add(hashMap);
         return new ResponseMessage(ResponseCode.SUCCESS, mapIPage);
     }
 
@@ -388,25 +387,6 @@ public class LoginController {
     @ResponseBody
     public ResponseMessage userList(@RequestBody Parameter pageParam) throws InterruptedException {
         List<SysUser> list = userService.selectList(pageParam);
-        List<Object> list1 = new ArrayList<>();
-//        HashMap<String, Object> hashMap = new HashMap<>();
-//        hashMap.put("deptName","测试一123");
-//        hashMap.put("img","http://demo9java.5kcrm.net/api//20190826/Logohong1.png");
-//        hashMap.put("createTime","2019-01-29 17:14,47");
-//        hashMap.put("roleId","25");
-//        hashMap.put("sex",2);
-//        hashMap.put("mobile","123456");
-//        hashMap.put("realname","张倩倩");
-//        hashMap.put("parentName",null);
-//        hashMap.put("post","员工");
-//        hashMap.put("userId",2);
-//        hashMap.put("parentId",null);
-//        hashMap.put("roleName","测试角色");
-//        hashMap.put("deptId",36);
-//        hashMap.put("email","54556@qq.com");
-//        hashMap.put("username","15589654126");
-//        hashMap.put("status",1);
-//        list1.add(hashMap);
         return new ResponseMessage(ResponseCode.SUCCESS, list);
     }
 
@@ -425,33 +405,6 @@ public class LoginController {
         }
         List<DepPojo> menuList = departmentService.getAllDep(deptId);
 
-
-//        List<Object> list = new ArrayList<>();
-//        List<Object> children = new ArrayList<>();
-//        List<Object> childrechildrenhaslist = new ArrayList<>();
-//        HashMap<String, Object> hashMap = new HashMap<>();
-//        HashMap<String, Object> childrenhashMap = new HashMap<>();
-//        HashMap<String, Object> childrechildrenhashMap = new HashMap<>();
-//        hashMap.put("level", "1");
-//        hashMap.put("children", children);
-//        hashMap.put("name", "办公室");
-//        hashMap.put("pid", 0);
-//        hashMap.put("id", 1);
-//        hashMap.put("label", "办公室");
-////        list.add(hashMap);
-//        childrenhashMap.put("level", "2");
-//        childrenhashMap.put("name", "办公室-1-1-1-11-11-");
-//        childrenhashMap.put("pid", 0);
-//        childrenhashMap.put("id", 16);
-//        childrenhashMap.put("label", "办公室-1-");
-//        children.add(childrenhashMap);
-//        childrechildrenhashMap.put("level", "2");
-//        childrechildrenhashMap.put("name", "办公室-1-1");
-//        childrechildrenhashMap.put("pid", 0);
-//        childrechildrenhashMap.put("id", 17);
-//        childrechildrenhashMap.put("label", "办公室-1-1");
-//        childrechildrenhaslist.add(childrechildrenhashMap);
-//        childrenhashMap.put("children", childrechildrenhaslist);
         return new ResponseMessage(ResponseCode.SUCCESS, menuList);
     }
 
@@ -523,6 +476,7 @@ public class LoginController {
     @RequestMapping(value = "dept/updateDept")
     @ResponseBody
     public ResponseMessage updateDept(@RequestBody Parameter pageParam, HttpServletRequest request) {
+
         Department department = new Department();
         department.setDeptId(Integer.parseInt(pageParam.getDeptId()));
         department.setPid(pageParam.getPid());
@@ -537,5 +491,23 @@ public class LoginController {
 
         return new ResponseMessage(ResponseCode.SUCCESS);
     }
+
+//    public static void main(String[] args) throws Exception {
+//        ArrayList<Integer> integers = new ArrayList<>();
+//        integers.add(1);
+//        integers.add(13);
+//        integers.add(10);
+////        Collections.sort(integers);
+//        String token = JwtManageTool.createToken(12l, "张倩文", "cccc");
+//        System.out.println(token);
+//        Map<String, Object> userId = JwtManageTool.getSysUserInfo(token);
+//
+//        System.out.println("一秒之前token：" + userId);
+//
+//        Thread.sleep(1000);
+//
+//        Map<String, Object> begoruserId = JwtManageTool.getSysUserInfo(token);
+//        System.out.println("一秒之后token：" + begoruserId);
+//    }
 
 }

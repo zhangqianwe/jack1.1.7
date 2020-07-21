@@ -1,13 +1,19 @@
 package com.jack.jackgateway.handler;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.jack.api.ResponseCode;
 import com.jack.api.ResponseMessage;
 import com.jack.common.jwt.JwtManageTool;
+import com.jack.jackgateway.Redis;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -26,8 +32,15 @@ public class JwtManageCheckGatewayFilterFactory extends AbstractGatewayFilterFac
         super(Config.class);
     }
 
+    @Autowired
+    private StringRedisTemplate template;
+
+    @Autowired
+    private RedisTemplate<Object, Object> redisTemplate;
+
     @Override
     public GatewayFilter apply(Config config) {
+
         return (exchange, chain) -> {
             String path = exchange.getRequest().getURI().getPath();
             if (path != null && StringUtils.isNoneEmpty(path) && config.jwtNoCheckPath != null && StringUtils.isNoneEmpty(config.jwtNoCheckPath) &&
@@ -86,10 +99,17 @@ public class JwtManageCheckGatewayFilterFactory extends AbstractGatewayFilterFac
                 if (sp.length == 2) {
                     String token = sp[1];
                     if (token != null && StringUtils.isNoneEmpty(token)) {
-//                        Map<String, Object> map = JwtManageTool.getSysUserInfo(token);
-//                        if (map != null && map.size() == 3) {
-                            return chain.filter(exchange);
-//                        }
+                        Map<String, Object> map = JwtManageTool.getSysUserInfo(token);
+                        if (map != null && map.size() == 3) {
+//                            String userNum = template.opsForValue().get(map.get("sysUserId"));
+//                            String tokenUsers = template.opsForValue().get("tokenUsers");
+//                            String replace = tokenUsers.replace("=", ":");
+//                            JSONObject jsonObject = JSONObject.parseObject(replace);
+//                            JSONObject sysUserId = jsonObject.getJSONObject(map.get("sysUserId").toString());
+//                            if (token != null && sysUserId.getString("token") != null && token.equals(sysUserId.getString("token"))) {
+                                return chain.filter(exchange);
+//                            }
+                        }
                     }
                 }
             }
@@ -98,7 +118,7 @@ public class JwtManageCheckGatewayFilterFactory extends AbstractGatewayFilterFac
             String mes = JSON.toJSONString(responseMessage);
             byte[] bits = mes.getBytes(StandardCharsets.UTF_8);
             DataBuffer buffer = response.bufferFactory().wrap(bits);
-            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            response.setStatusCode(HttpStatus.OK);
             //指定编码，否则在浏览器中会中文乱码
 
             response.getHeaders().add("Content-Type", "text/plain;charset=UTF-8");

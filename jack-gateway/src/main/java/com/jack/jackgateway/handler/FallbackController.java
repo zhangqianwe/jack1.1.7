@@ -4,6 +4,7 @@ import com.jack.api.ResponseCode;
 import com.jack.api.ResponseMessage;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -14,7 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class FallbackController  {
     @RequestMapping(value = "/fallback", method = {RequestMethod.POST, RequestMethod.GET})
+    @ResponseBody
     public ResponseMessage fallback() {
-        return new ResponseMessage(ResponseCode.REMOTE_SERVER_ERROR);
+        return new ResponseMessage(ResponseCode.SUCCESS);
     }
 }

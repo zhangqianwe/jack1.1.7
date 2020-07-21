@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace=" com.jack.mapper.UserMapper">
+    <resultMap id="BaseResultMap" type="com.jack.jackOnline.SysUser">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+<!--        <result column="status" property="status" jdbcType="VARCHAR"/>-->
+<!--        <result column="schooladdress" property="schooladdress" jdbcType="VARCHAR"/>-->
+<!--        <result column="login_name" property="login_name" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolphone2" property="schoolphone2" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolpostalcode" property="schoolpostalcode" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolwebsite" property="schoolwebsite" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolxueduan" property="schoolxueduan" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolprovince" property="schoolprovince" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolqu" property="schoolqu" jdbcType="VARCHAR"/>-->
+<!--        <result column="schoolxian" property="schoolxian" jdbcType="VARCHAR"/>-->
+<!--        <result column="page" property="page" jdbcType="INTEGER"/>-->
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+    </sql>
+    <select id="selectByPrimaryKey" resultType="java.lang.Integer" parameterType="java.lang.Long">
+        select
+        count (*)
+        from school
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+
+<!--    <select id="selectByShoolName" resultMap="BaseResultMap" parameterType="map">-->
+<!--        select-->
+<!--        distinct (schoolname)-->
+<!--        from school-->
+<!--        where (schoolxueduan="初中" or schoolxueduan="高中")-->
+<!--        <if test="content != null and content != ''">-->
+<!--            and schoolname LIKE concat('%',#{content},'%')-->
+<!--        </if>-->
+<!--        limit 0,10;-->
+<!--    </select>-->
+
+<!--    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">-->
+<!--    delete from school-->
+<!--    where id = #{id,jdbcType=BIGINT}-->
+<!--  </delete>-->
+<!--    <insert id="insert" parameterType="com.speciala.model.saeduol.entity.BusinessSchool">-->
+<!--    insert into school (id, schoolname, schooladdress, -->
+<!--      schoolphone, schoolphone2, schoolpostalcode, -->
+<!--      schoolwebsite, schoolxueduan, schoolprovince, -->
+<!--      schoolqu, schoolxian, page-->
+<!--      )-->
+<!--    values (#{id,jdbcType=BIGINT}, #{schoolname,jdbcType=VARCHAR}, #{schooladdress,jdbcType=VARCHAR}, -->
+<!--      #{schoolphone,jdbcType=VARCHAR}, #{schoolphone2,jdbcType=VARCHAR}, #{schoolpostalcode,jdbcType=VARCHAR}, -->
+<!--      #{schoolwebsite,jdbcType=VARCHAR}, #{schoolxueduan,jdbcType=VARCHAR}, #{schoolprovince,jdbcType=VARCHAR}, -->
+<!--      #{schoolqu,jdbcType=VARCHAR}, #{schoolxian,jdbcType=VARCHAR}, #{page,jdbcType=INTEGER}-->
+<!--      )-->
+<!--  </insert>-->
+<!--    <insert id="insertSelective" parameterType="com.speciala.model.saeduol.entity.BusinessSchool">-->
+<!--        insert into school-->
+<!--        <trim prefix="(" suffix=")" suffixOverrides=",">-->
+<!--            <if test="id != null">-->
+<!--                id,-->
+<!--            </if>-->
+<!--            <if test="schoolname != null">-->
+<!--                schoolname,-->
+<!--            </if>-->
+<!--            <if test="schooladdress != null">-->
+<!--                schooladdress,-->
+<!--            </if>-->
+<!--            <if test="schoolphone != null">-->
+<!--                schoolphone,-->
+<!--            </if>-->
+<!--            <if test="schoolphone2 != null">-->
+<!--                schoolphone2,-->
+<!--            </if>-->
+<!--            <if test="schoolpostalcode != null">-->
+<!--                schoolpostalcode,-->
+<!--            </if>-->
+<!--            <if test="schoolwebsite != null">-->
+<!--                schoolwebsite,-->
+<!--            </if>-->
+<!--            <if test="schoolxueduan != null">-->
+<!--                schoolxueduan,-->
+<!--            </if>-->
+<!--            <if test="schoolprovince != null">-->
+<!--                schoolprovince,-->
+<!--            </if>-->
+<!--            <if test="schoolqu != null">-->
+<!--                schoolqu,-->
+<!--            </if>-->
+<!--            <if test="schoolxian != null">-->
+<!--                schoolxian,-->
+<!--            </if>-->
+<!--            <if test="page != null">-->
+<!--                page,-->
+<!--            </if>-->
+<!--        </trim>-->
+<!--        <trim prefix="values (" suffix=")" suffixOverrides=",">-->
+<!--            <if test="id != null">-->
+<!--                #{id,jdbcType=BIGINT},-->
+<!--            </if>-->
+<!--            <if test="schoolname != null">-->
+<!--                #{schoolname,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schooladdress != null">-->
+<!--                #{schooladdress,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolphone != null">-->
+<!--                #{schoolphone,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolphone2 != null">-->
+<!--                #{schoolphone2,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolpostalcode != null">-->
+<!--                #{schoolpostalcode,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolwebsite != null">-->
+<!--                #{schoolwebsite,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolxueduan != null">-->
+<!--                #{schoolxueduan,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolprovince != null">-->
+<!--                #{schoolprovince,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolqu != null">-->
+<!--                #{schoolqu,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolxian != null">-->
+<!--                #{schoolxian,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="page != null">-->
+<!--                #{page,jdbcType=INTEGER},-->
+<!--            </if>-->
+<!--        </trim>-->
+<!--    </insert>-->
+<!--    <update id="updateByPrimaryKeySelective" parameterType="com.speciala.model.saeduol.entity.BusinessSchool">-->
+<!--        update school-->
+<!--        <set>-->
+<!--            <if test="schoolname != null">-->
+<!--                schoolname = #{schoolname,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schooladdress != null">-->
+<!--                schooladdress = #{schooladdress,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolphone != null">-->
+<!--                schoolphone = #{schoolphone,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolphone2 != null">-->
+<!--                schoolphone2 = #{schoolphone2,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolpostalcode != null">-->
+<!--                schoolpostalcode = #{schoolpostalcode,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolwebsite != null">-->
+<!--                schoolwebsite = #{schoolwebsite,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolxueduan != null">-->
+<!--                schoolxueduan = #{schoolxueduan,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolprovince != null">-->
+<!--                schoolprovince = #{schoolprovince,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolqu != null">-->
+<!--                schoolqu = #{schoolqu,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="schoolxian != null">-->
+<!--                schoolxian = #{schoolxian,jdbcType=VARCHAR},-->
+<!--            </if>-->
+<!--            <if test="page != null">-->
+<!--                page = #{page,jdbcType=INTEGER},-->
+<!--            </if>-->
+<!--        </set>-->
+<!--        where id = #{id,jdbcType=BIGINT}-->
+<!--    </update>-->
+<!--    <update id="updateByPrimaryKey" parameterType="com.speciala.model.saeduol.entity.BusinessSchool">-->
+<!--    update school-->
+<!--    set schoolname = #{schoolname,jdbcType=VARCHAR},-->
+<!--      schooladdress = #{schooladdress,jdbcType=VARCHAR},-->
+<!--      schoolphone = #{schoolphone,jdbcType=VARCHAR},-->
+<!--      schoolphone2 = #{schoolphone2,jdbcType=VARCHAR},-->
+<!--      schoolpostalcode = #{schoolpostalcode,jdbcType=VARCHAR},-->
+<!--      schoolwebsite = #{schoolwebsite,jdbcType=VARCHAR},-->
+<!--      schoolxueduan = #{schoolxueduan,jdbcType=VARCHAR},-->
+<!--      schoolprovince = #{schoolprovince,jdbcType=VARCHAR},-->
+<!--      schoolqu = #{schoolqu,jdbcType=VARCHAR},-->
+<!--      schoolxian = #{schoolxian,jdbcType=VARCHAR},-->
+<!--      page = #{page,jdbcType=INTEGER}-->
+<!--    where id = #{id,jdbcType=BIGINT}-->
+<!--  </update>-->
+</mapper>

@@ -3,13 +3,10 @@ package com.jack.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.jack.api.PageParam;
 import com.jack.api.ResponseMessage;
 import com.jack.customPojo.Parameter;
 import com.jack.jackOnline.SysUser;
-import com.jack.pojo.User;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,7 +17,6 @@ import java.util.Map;
  */
 
 public interface UserService extends IService<SysUser> {
-    User getById2(int i);
 
     IPage<Map<String, Object>> userService(Parameter pageParam);
 
@@ -29,4 +25,8 @@ public interface UserService extends IService<SysUser> {
     ResponseMessage selectByUserNameAndPassWord(String userName, String passWord) throws Exception;
 
     List<SysUser> selectList(Parameter pageParam);
+    Integer selectByPrimaryKey();
+    List<SysUser> selectBu();
+
+    Page<SysUser> selectPage(Parameter pageParam);
 }

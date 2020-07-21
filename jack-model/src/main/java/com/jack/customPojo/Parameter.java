@@ -33,6 +33,7 @@ public class Parameter extends PageParam {
     private Integer sysRoleId;
 
     private String userIds;
+    private Integer last_id;
 
 
 
